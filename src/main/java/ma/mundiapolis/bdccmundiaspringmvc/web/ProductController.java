@@ -1,7 +1,9 @@
 package ma.mundiapolis.bdccmundiaspringmvc.web;
 
 
+import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.ui.Model;
 import ma.mundiapolis.bdccmundiaspringmvc.entities.Product;
 import ma.mundiapolis.bdccmundiaspringmvc.repository.ProductRepository;
@@ -20,6 +22,7 @@ public class ProductController {
     @Autowired
     private ProductRepository productRepository;
     @GetMapping("/user/index")
+    @PreAuthorize("hasRole('USER')")
     public String index(Model model) {
         List<Product> products = productRepository.findAll();
         model.addAttribute("productList",products);
@@ -31,12 +34,14 @@ public class ProductController {
         return "redirect:/user/index";
     }
 
-    @DeleteMapping("/admin/delete")
+    @PostMapping("/admin/delete")
+    @PreAuthorize("hasRole('ADMIN')")
     public String delete(@RequestParam("id") Long id) {
         productRepository.deleteById(id);
         return "redirect:/user/index";
     }
     @GetMapping("/admin/newProduct")
+    @PreAuthorize("hasRole('ADMIN')")
     public String newProduct(Model model) {
         model.addAttribute("product", new Product());
         return "new-product";
@@ -44,6 +49,7 @@ public class ProductController {
 
 
     @PostMapping("/admin/saveProduct")
+    @PreAuthorize("hasRole('ADMIN')")
     public String saveProduct(@Valid Product product, BindingResult bindingResult, Model model) {
         if(bindingResult.hasErrors()) return "new-product";
         productRepository.save(product);
@@ -53,5 +59,17 @@ public class ProductController {
     @GetMapping("/notAuthorized")
     public String notAuthorized() {
         return "notAuthorized";
+    }
+
+    @GetMapping("/login")
+    public String Login() {
+        return "login";
+    }
+
+
+    @GetMapping("/logout")
+    public String Logout(HttpSession session) {
+        session.invalidate();
+        return "login";
     }
 }
